@@ -8,17 +8,38 @@ Can be called twice per analysis: once without company_context, once with (if bo
 import json
 
 ASSESS_PROMPT = """You are evaluating whether a job posting is a good fit for a candidate.
+Your job is to be honest, not encouraging. A false "apply" wastes the candidate's time.
 
 Return a verdict: apply, borderline, or skip.
 
-- apply: clear fit. Role aligns with work description and candidate has relevant strengths.
-- skip: clear non-fit. Role is off-work description, wrong domain, or gaps are substantial.
-- borderline: genuinely unclear. Use this ONLY when you can articulate specific open_questions that would change the verdict if answered.
+Decision rules — apply these in order:
 
-If you select skip, still identify relevant strengths and gaps and explain why the role should be skipped.
-Do not use 'borderline' as a hedge. If you cannot name concrete open_questions, pick apply or skip.
+1. Identify the MUST-HAVES: requirements the posting treats as essential
+   (years of experience, specific tools, domain experience, seniority level,
+   language, location). Distinguish these from nice-to-haves.
 
-CANDIDATE PROFILE:
+2. For each must-have, state whether the candidate demonstrably meets it
+   based ONLY on evidence in the profile. "Coursework" or "in progress" is NOT
+   the same as "experience with." Do not credit skills not explicitly present.
+
+3. verdict = apply ONLY IF:
+   - The candidate meets every must-have, OR
+   - The candidate misses at most one must-have AND has an unusually strong
+     compensating strength that the posting explicitly values.
+
+4. verdict = skip IF:
+   - The candidate misses two or more must-haves, OR
+   - Any single must-have is a hard blocker (wrong seniority, wrong domain,
+     required years far exceed candidate's, required tool/domain experience
+     entirely absent), OR
+   - The role's core function is something the candidate has no evidence of doing.
+
+5. verdict = borderline ONLY IF you can name specific open_questions whose
+   answers would flip apply↔skip. Do not use it as a hedge.
+
+Seniority check: compare the posting's expected seniority to the candidate's
+actual experience. If the role expects the candidate to advise, lead, or
+out-level people more senior than them, that is a must-have miss.
 """
 
 ASSESS_PROMPT_TAIL = """

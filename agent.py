@@ -1,14 +1,3 @@
-# agent_v2.py
-"""
-Job Triage Agent (v2).
-
-Replaces v1's fit-score pipeline with a triage agent that decides
-apply / borderline / skip. Uses OpenAI's tool-calling loop.
-
-Current state: minimum viable. Only fetch + extract tools are wired up.
-The remaining three tools (check_hard_filters, assess_fit, search_company_context)
-will be added one at a time.
-"""
 import json
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -195,7 +184,7 @@ def _execute_tool(name: str, args: dict) -> dict:
     else:
         result = {"error": f"Unknown tool: {name}"}
 
-    print(f"[TOOL RESULT] {name} → {json.dumps(result, ensure_ascii=False)[:300]}", flush=True)
+    print(f"[TOOL RESULT] {name} → {json.dumps(result, ensure_ascii=False)[:3000]}", flush=True)
     return result
 
 SYSTEM_PROMPT = """You are a job triage agent. You decide whether a job posting is worth the user applying to: apply, borderline, or skip.

@@ -28,7 +28,20 @@ Return a JSON object with these exact keys:
     - title_level: the seniority word in the title (e.g. "Junior", "Senior", "Associate"), or "unspecified"
     - years_experience_required: as written (e.g. "3+ years", "unspecified")
     - role_context_snippet: 1-2 sentences from the posting describing role seniority context
-- key_skills_mentioned: array of strings, up to 10 technical or domain skills named
+- required_skills: array of strings, up to 8. HARD requirements only — specific
+  tools, technologies, named platforms, domain experience, or credentials the
+  posting treats as essential. Examples: "BigQuery", "Snowflake", "dbt", "SQL",
+  "5+ years in analytics", "Python". Signals: "must have", "required", "you have
+  experience with", "proven track record", or a tool named as core to the role.
+  EXCLUDE anything interpersonal or behavioral, even if it is framed as required.
+- preferred_skills: array of strings, up to 6. Hard skills the posting would like
+  but does not require. Signals: "nice to have", "a plus", "bonus", "familiarity
+  with", "exposure to". EXCLUDE soft skills.
+- soft_skills: array of strings, up to 6. Interpersonal or working-style traits
+  named in the posting. Examples: "communication", "presentation", "teaching",
+  "mentoring", "collaboration", "organization", "ownership". If the posting
+  describes a behavior or interpersonal expectation, it goes here — even if the
+  posting frames it as essential.
 - extraction_confidence: "high" | "medium" | "low"
     - Set to "low" if the posting was vague, fragmentary, or missing key triage info.
 
@@ -66,7 +79,9 @@ def extract_job_signals(job_text: str, client) -> dict:
                 "years_experience_required": "unspecified",
                 "role_context_snippet": "",
             },
-            "key_skills_mentioned": [],
+            "required_skills": [],
+            "preferred_skills": [],
+            "soft_skills": [],
             "extraction_confidence": "low",
         }
     # print("[EXTRACT] calling LLM", flush=True)

@@ -42,6 +42,7 @@
   knowledge flows (Master's coursework, grade B).
 - NLP and linguistic data processing: applied NLP methods,
   deep learning for language data (Bachelor's coursework, grade 1.0).
+- Teaching assistant at Stockholm University: Supported a Master's-level course on systems theory and its application to  organizations and IT (systems thinking, organizational structure, and information and communication systems)
 
 ## Languages
 - German: native

@@ -5,15 +5,14 @@
       {"language": "German", "level": "native"},
       {"language": "Swedish", "level": "conversational"}
     ],
-    "seniority_description": "Early-career: Master's student graduating July 2026, targeting internships, entry-level, junior, and associate positions. Open to 'Associate Consultant' at consulting firms (typically entry-level). Not open to 'Senior', 'Lead', 'Principal', 'Staff', or 'Manager' roles, or positions requiring 3+ years of post-graduate experience."
+    "seniority_description": "Early-career: graduated from a Master's in Strategic Information Systems Management from Stockholm University in July 2026, targeting internships, entry-level, junior, and associate positions. Open to 'Associate Consultant' at consulting firms (typically entry-level). Not open to 'Senior', 'Lead', 'Principal', 'Staff', or 'Manager' roles, or positions requiring 3+ years of post-graduate experience."
   },
   "soft_signals": {
     "work_description": "Open to early-career roles across data, AI, consulting, product and project management, and adjacent fields. Strong interest in: data or business analysis and insights, AI automation and agent design, digital transformation, consulting, business analysis, knowledge management, project coordination and management. Also open to communications, PR, and creative operations roles that leverage media production and international cooperation background. Prefer roles with a mix of technical and communication or strategic work. Not interested in pure sales, pure design, or deep engineering roles requiring production ML/distributed systems expertise."
   ,
     "technical_skills": {
-      "advanced": ["Python", "JavaScript", "HTML/CSS"],
-      "intermediate": ["SQL", "pandas", "Git", "Azure DevOps", "Jira", "Confluence"],
-      "basic": ["Java"],
+      "intermediate": ["Python", "JavaScript", "HTML/CSS","Git", "Azure DevOps", "Jira", "Confluence"],
+      "basic": ["SQL", "pandas"],
       "learning": ["AI agents", "LLM tool use", "n8n/Zapier", "prompt engineering"]
     },
     "domain_experience": [
@@ -25,7 +24,7 @@
     ],
     "work_authorization": ["EU"],
     "preferences": {
-      "locations": ["Stockholm", "Remote-EU", "Berlin", "Germany"],
+      "locations": ["Stockholm", "Remote-EU", "Köln", "Cologne", "Frankfurt", "Germany", "Lund", "Malmö", "Göteborg", "Copenhagen", "Belgium", "Amsterdam", "Rotterdam", "Brussels"],
       "work_model": ["hybrid", "remote", "on-site"]
     }
   }
