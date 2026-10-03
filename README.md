@@ -46,6 +46,17 @@ CLI usage:
 python agent.py "https://example.com/job-posting"
 ```
 
+If a posting can't be fetched (JavaScript-only page, blocked site), save its text to a file and pass it directly:
+```bash
+python agent.py --text posting.txt --url "https://example.com/job-posting"
+```
+With `--text`, the file is what gets judged; `--url` is optional and only included in the output as the link. A failed fetch never produces a verdict — the agent exits with an error telling you to use `--text`.
+
+Tests (offline, no API key needed):
+```bash
+python -m unittest discover tests
+```
+
 Evaluation:
 ```bash
 python eval_runner.py
@@ -78,12 +89,7 @@ Disagreements traced to profile miscalibration (overly optimistic manual scoring
 
 ## Known limitations
 
-- Workday, LinkedIn, some careers portals block automated fetching → UI supports manual paste fallback
+- Ashby, Greenhouse and Lever postings are read through their public posting APIs (see `JOB_BOARD_APIS` in `skills/fetch_job.py` to add more boards)
+- Workday, LinkedIn, some careers portals block automated fetching → use `--text` on the CLI or the paste fallback in the UI
 - Company context uses training knowledge (no web search) with eval-triggered upgrade path planned
 
-## What's next (v2.1)
-
-- CV recommendation tool for `apply` verdicts
-- SQLite for cross-analysis history
-- Expand eval set to 15+ URLs
-- Web search for borderline company context

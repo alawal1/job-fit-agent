@@ -25,6 +25,9 @@ Four bug categories hit during v2 build:
 3. Silent exception swallower in _execute_tool wrapper → added [TOOL ERROR] logging
 4. Unescaped `{...}` in prompt template broke .format() → switched to string concat
 
+## Fetching: API first, then HTML, never empty
+Many job boards (Ashby, Greenhouse, Lever) render postings with JavaScript, so a plain HTTP fetch returns a shell page ("You need to enable JavaScript to run this app.") and the agent ended up judging an empty posting with a confident-looking skip. These boards also publish public, unauthenticated posting APIs that return the same description as structured data, so `fetch_job_posting` checks the URL against one table of board patterns (`JOB_BOARD_APIS`) and calls the API when one matches. This is more reliable than scraping HTML, needs no headless browser, and reads only what the board publishes for job aggregators. For every other site it falls back to HTML. Either way, text under 300 characters or containing "enable JavaScript" raises `FetchError`. The run stops with that error instead of producing a verdict, and the user can supply the text with `--text`.
+
 ## Known limitations
 
-- **Workday and LinkedIn URLs cannot be fetched programmatically.** These sites render job content via JavaScript and block simple HTTP fetching. `fetch_job_posting` returns empty text for these URLs, and the agent correctly defaults to skip on empty input. Planned workaround (UI phase): detect these URL patterns client-side, prompt the user to paste the job description directly, and feed the text straight into `extract_job_signals`, bypassing `fetch_job_posting`.
+- **Workday and LinkedIn URLs cannot be fetched programmatically.** These sites render job content via JavaScript and block simple HTTP fetching. `fetch_job_posting` raises `FetchError` for them instead of passing on empty text, and the run ends with an error rather than a verdict. Workaround: paste the posting text in the UI, or run `python agent.py --text posting.txt --url <link>`.

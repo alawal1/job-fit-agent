@@ -66,7 +66,7 @@ def assess_fit(signals: dict, profile: dict, client, company_context: dict | Non
     profile_files = ["experience.md", "skills.md", "education.md", "positioning.md"]
     
     for filename in profile_files:
-        filepath = f"data/profile/{filename}"
+        filepath = f"data/{filename}"
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 profile_context += f"\n## {filename.replace('.md', '').title()}\n"

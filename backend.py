@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 
+from skills.fetch_job import FetchError
 from agent import run_agent_v2, run_agent_v2_from_text, calculate_composite_score
 
 app = FastAPI()
@@ -36,6 +37,8 @@ async def analyze_v2(request: Request):
     try:
         result = run_agent_v2(url)
         # print(f"[BACKEND] Returning: {json.dumps(result, indent=2)}", flush=True)
+    except FetchError as exc:
+        return JSONResponse(content={"blocked": True, "message": str(exc)})
     except Exception as exc:
         return JSONResponse(status_code=500, content={"error": str(exc)})
 

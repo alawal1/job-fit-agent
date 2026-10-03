@@ -1,8 +1,9 @@
 import json
+import sys
 from openai import OpenAI
 from dotenv import load_dotenv
 
-from skills.fetch_job import fetch_job_posting
+from skills.fetch_job import FetchError, fetch_job_posting
 from skills.extract_signals import extract_job_signals
 from skills.check_filters import check_hard_filters
 from skills.assess_fit import assess_fit
@@ -277,6 +278,8 @@ def run_agent_v2(url: str) -> dict:
                     # Capture CV recommendations  
                     if tool_call.function.name == "suggest_cv_improvements" and "recommendations" in result:
                         cv_recommendations_result = result
+                except FetchError:
+                    raise  # no posting text → nothing to judge; caller reports the error
                 except Exception as e:
                     print(f"[TOOL ERROR] {tool_call.function.name}: {type(e).__name__}: {e}", flush=True)
                     result = {"error": f"{type(e).__name__}: {e}"}
@@ -411,15 +414,27 @@ def run_agent_v2_from_text(job_text: str) -> dict:
     }
     
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) < 2:
-        print("Usage: python agent_v2.py <job_url>")
-        sys.exit(1)
+    import argparse
+    parser = argparse.ArgumentParser(description="Triage a job posting: apply / borderline / skip.")
+    parser.add_argument("url", nargs="?", help="Job posting URL")
+    parser.add_argument("--url", dest="link", help="Link to the posting (with --text: only shown, not fetched)")
+    parser.add_argument("--text", help="File with the posting text; used instead of fetching the URL")
+    args = parser.parse_args()
+    url = args.link or args.url
+    if not (args.text or url):
+        parser.error("give a job URL or --text <file>")
 
     try:
-        result = run_agent_v2(sys.argv[1])
+        if args.text:
+            with open(args.text, encoding="utf-8") as f:
+                result = run_agent_v2_from_text(f.read().strip())
+            if url:
+                result["url"] = url
+        else:
+            result = run_agent_v2(url)
         print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
+    except FetchError as exc:
+        print(json.dumps({"error": str(exc), "url": url}, indent=2, ensure_ascii=False))
+        sys.exit(1)
     finally:
-        print("DEBUG: about to close client", flush=True)
         client.close()
-        print("DEBUG: client closed", flush=True)
