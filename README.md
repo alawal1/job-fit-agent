@@ -33,50 +33,37 @@ Python, FastAPI, OpenAI API (tool use + JSON mode), vanilla JS frontend.
 
 ## How to run
 
-```bash
 pip install fastapi uvicorn openai python-dotenv requests beautifulsoup4
 echo "OPENAI_API_KEY=sk-..." > .env
 uvicorn backend:app --reload
-```
+
 
 Then open `http://localhost:8000`.
 
 CLI usage:
-```bash
+
 python agent.py "https://example.com/job-posting"
-```
+
 
 If a posting can't be fetched (JavaScript-only page, blocked site), save its text to a file and pass it directly:
-```bash
+
 python agent.py --text posting.txt --url "https://example.com/job-posting"
-```
+
 With `--text`, the file is what gets judged; `--url` is optional and only included in the output as the link. A failed fetch never produces a verdict — the agent exits with an error telling you to use `--text`.
 
 Batch mode — judge every job in a queue file:
-```bash
+
 python agent.py --queue jobs/queue.md
-```
-Queue format, one block per job (`text` is optional, relative to the queue file; if given it is used instead of fetching the url):
-```markdown
-## Legora — Legal Engineering Operations Associate
-- url: https://jobs.ashbyhq.com/legora/3c75574c-...
-- text: postings/legora.txt
-```
-Results go to `<queue-name>-results.md` next to the queue (e.g. `jobs/queue-results.md`): a summary line at the top (`2 apply · 1 borderline · 3 skip · 1 failed`), then one block per job with url, verdict, confidence, strengths, gaps, open questions and reason. One failing job doesn't stop the batch. Re-running skips jobs already in the results file (matched by url); a failed job is retried once on the next run and then left as failed. When done, a macOS notification shows "Job-fit: x apply, y borderline".
 
 Tests (offline, no API key needed):
-```bash
-python -m unittest discover tests
-```
 
-Evaluation:
-```bash
+python -m unittest discover tests
+
+## Evaluation
 python eval_runner.py
-```
+
 ## Project structure
 
-```
-v2/
 ├── agent.py              # Main loop + tool definitions
 ├── backend.py            # FastAPI server
 ├── index.html            # Web UI
@@ -88,21 +75,15 @@ v2/
 ├── data/
 │   ├── profile.json      # Candidate profile (hard filters + soft signals)
 │   └── eval_set.csv      # Ground-truth verdicts for evaluation
-├── batch.py              # --queue batch mode
 └── eval_runner.py        # Eval against manual scoring
-```
+
 
 ## Evaluation
 
-Agent evaluated against manually-scored job postings. Primary metric: agreement with my triage decisions.
-
-**Current:** 80% agreement on 5 fetchable URLs (small eval set, v2 alpha).
-
-Disagreements traced to profile miscalibration (overly optimistic manual scoring vs. stated hard filters). Agent held to stricter-but-principled verdicts.
+Agent evaluated against manually-scored job postings. Primary metric: agreement with my decisions.
 
 ## Known limitations
 
-- Ashby, Greenhouse and Lever postings are read through their public posting APIs (see `JOB_BOARD_APIS` in `skills/fetch_job.py` to add more boards)
-- Workday, LinkedIn, some careers portals block automated fetching → use `--text` on the CLI or the paste fallback in the UI
+- Workday, LinkedIn, some careers portals block automated fetching → UI supports manual paste fallback
 - Company context uses training knowledge (no web search) with eval-triggered upgrade path planned
 
