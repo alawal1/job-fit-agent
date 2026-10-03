@@ -52,6 +52,18 @@ python agent.py --text posting.txt --url "https://example.com/job-posting"
 ```
 With `--text`, the file is what gets judged; `--url` is optional and only included in the output as the link. A failed fetch never produces a verdict — the agent exits with an error telling you to use `--text`.
 
+Batch mode — judge every job in a queue file:
+```bash
+python agent.py --queue jobs/queue.md
+```
+Queue format, one block per job (`text` is optional, relative to the queue file; if given it is used instead of fetching the url):
+```markdown
+## Legora — Legal Engineering Operations Associate
+- url: https://jobs.ashbyhq.com/legora/3c75574c-...
+- text: postings/legora.txt
+```
+Results go to `<queue-name>-results.md` next to the queue (e.g. `jobs/queue-results.md`): a summary line at the top (`2 apply · 1 borderline · 3 skip · 1 failed`), then one block per job with url, verdict, confidence, strengths, gaps, open questions and reason. One failing job doesn't stop the batch. Re-running skips jobs already in the results file (matched by url); a failed job is retried once on the next run and then left as failed. When done, a macOS notification shows "Job-fit: x apply, y borderline".
+
 Tests (offline, no API key needed):
 ```bash
 python -m unittest discover tests
@@ -76,6 +88,7 @@ v2/
 ├── data/
 │   ├── profile.json      # Candidate profile (hard filters + soft signals)
 │   └── eval_set.csv      # Ground-truth verdicts for evaluation
+├── batch.py              # --queue batch mode
 └── eval_runner.py        # Eval against manual scoring
 ```
 

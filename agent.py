@@ -419,12 +419,17 @@ if __name__ == "__main__":
     parser.add_argument("url", nargs="?", help="Job posting URL")
     parser.add_argument("--url", dest="link", help="Link to the posting (with --text: only shown, not fetched)")
     parser.add_argument("--text", help="File with the posting text; used instead of fetching the URL")
+    parser.add_argument("--queue", help="Queue .md file; judges every job and writes <queue-name>-results.md")
     args = parser.parse_args()
     url = args.link or args.url
-    if not (args.text or url):
-        parser.error("give a job URL or --text <file>")
+    if not (args.text or url or args.queue):
+        parser.error("give a job URL, --text <file> or --queue <file>")
 
     try:
+        if args.queue:
+            from batch import run_queue
+            run_queue(args.queue)
+            sys.exit(0)
         if args.text:
             with open(args.text, encoding="utf-8") as f:
                 result = run_agent_v2_from_text(f.read().strip())
