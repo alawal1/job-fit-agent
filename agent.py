@@ -159,14 +159,15 @@ TOOL_DEFINITIONS = [
 
 
 # Runtime implementations. Tools that need the OpenAI client get it passed in.
-def _execute_tool(name: str, args: dict) -> dict:
+def _execute_tool(name: str, args: dict, posting_text: str | None = None) -> dict:
     print(f"[TOOL CALLED] name={name} args_keys={list(args.keys())}", flush=True)
 
     if name == "fetch_job_posting":
         text = fetch_job_posting(args["url"])
         result = {"text": text, "length_chars": len(text)}
     elif name == "extract_job_signals":
-        result = extract_job_signals(args["job_text"], client)
+        # Use the real posting text: the model's retyped copy in args loses structure (e.g. "Bonus" labels).
+        result = extract_job_signals(posting_text or args["job_text"], client)
     elif name == "check_hard_filters":
         if "signals" not in args:
             result = {"error": "Missing 'signals' argument. You must pass the signals object from extract_job_signals."}
@@ -216,6 +217,7 @@ def run_agent_v2(url: str) -> dict:
     assess_fit_result = None  # Track the last assess_fit output
     last_check_filters_result = None
     cv_recommendations_result = None
+    posting_text = None
 
     for iteration in range(MAX_ITERATIONS):
         response = client.chat.completions.create(
@@ -270,13 +272,15 @@ def run_agent_v2(url: str) -> dict:
                 tool_calls_made += 1
                 args = json.loads(tool_call.function.arguments)
                 try:
-                    result = _execute_tool(tool_call.function.name, args)
+                    result = _execute_tool(tool_call.function.name, args, posting_text)
+                    if tool_call.function.name == "fetch_job_posting":
+                        posting_text = result["text"]
                     if tool_call.function.name == "assess_fit" and "verdict" in result:
                         assess_fit_result = result
                     if tool_call.function.name == "check_hard_filters" and "passed" in result:
                         last_check_filters_result = result
                     # Capture CV recommendations  
-                    if tool_call.function.name == "suggest_cv_improvements" and "recommendations" in result:
+                    if tool_call.function.name == "suggest_cv_improvements" and "rewrite" in result:
                         cv_recommendations_result = result
                 except FetchError:
                     raise  # no posting text → nothing to judge; caller reports the error
@@ -381,12 +385,12 @@ def run_agent_v2_from_text(job_text: str) -> dict:
                 
                 args = json.loads(tool_call.function.arguments)
                 try:
-                    result = _execute_tool(tool_call.function.name, args)
+                    result = _execute_tool(tool_call.function.name, args, job_text)
                     if tool_call.function.name == "assess_fit" and "verdict" in result:
                         assess_fit_result = result
                     if tool_call.function.name == "check_hard_filters" and "passed" in result:
                         last_check_filters_result = result
-                    if tool_call.function.name == "suggest_cv_improvements" and "recommendations" in result:
+                    if tool_call.function.name == "suggest_cv_improvements" and "rewrite" in result:
                         cv_recommendations_result = result
                 except Exception as e:
                     print(f"[TOOL ERROR] {tool_call.function.name}: {type(e).__name__}: {e}", flush=True)
@@ -438,6 +442,9 @@ if __name__ == "__main__":
         else:
             result = run_agent_v2(url)
         print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
+        if result.get("cv_recommendations"):
+            print("\nCV RECOMMENDATIONS")
+            print("\n".join(result["cv_recommendations"]["readable"]))
     except FetchError as exc:
         print(json.dumps({"error": str(exc), "url": url}, indent=2, ensure_ascii=False))
         sys.exit(1)

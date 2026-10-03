@@ -364,15 +364,9 @@
         html += `</div>`;
       }
 
-      if (data.cv_recommendations && data.cv_recommendations.recommendations && data.cv_recommendations.recommendations.length > 0) {
+      if (data.cv_recommendations && data.cv_recommendations.readable && data.cv_recommendations.readable.length > 0) {
         html += `<div class="section"><h3>📋 CV Recommendations</h3>`;
-        data.cv_recommendations.recommendations.forEach(rec => html += `<div class="list-item">${rec}</div>`);
-        html += `</div>`;
-      }
-
-      if (data.cv_recommendations && data.cv_recommendations.cv_gaps && data.cv_recommendations.cv_gaps.length > 0) {
-        html += `<div class="section"><h3>⚠️ Missing from CV</h3>`;
-        data.cv_recommendations.cv_gaps.forEach(gap => html += `<div class="list-item">${gap}</div>`);
+        data.cv_recommendations.readable.forEach(rec => html += `<div class="list-item">${rec}</div>`);
         html += `</div>`;
       }
 

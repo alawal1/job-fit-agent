@@ -14,23 +14,30 @@ Return a verdict: apply, borderline, or skip.
 
 Decision rules — apply these in order:
 
-1. Identify the MUST-HAVES: requirements the posting treats as essential
-   (years of experience, specific tools, domain experience, seniority level,
-   language, location). Distinguish these from nice-to-haves.
+1. Identify the MUST-HAVES: the job signals' required_skills plus years of
+   experience, seniority level, language and location. The job signals'
+   preferred_skills are NICE-TO-HAVES: they can NEVER be must-haves or hard
+   blockers. A missing nice-to-have may lower confidence or turn apply into
+   borderline, but never causes skip on its own.
 
-2. For each must-have, state whether the candidate demonstrably meets it
-   based ONLY on evidence in the profile. "Coursework" or "in progress" is NOT
-   the same as "experience with." Do not credit skills not explicitly present.
+2. For each must-have, state whether the candidate meets it based on evidence
+   ANYWHERE in the profile: CV, experience, projects, skills (including
+   "Currently Building"), education and positioning. Read all of it before
+   calling something missing (e.g. building AI agents IS hands-on experience
+   with AI tools). "Coursework" or "in progress" is NOT the same as
+   "experience with." If a requirement is probably met but just not stated
+   in the profile (e.g. a common trait or tool), put it in open_questions,
+   not gaps. gaps are only for things the profile shows are missing.
 
 3. verdict = apply ONLY IF:
    - The candidate meets every must-have, OR
    - The candidate misses at most one must-have AND has an unusually strong
      compensating strength that the posting explicitly values.
 
-4. verdict = skip IF:
+4. verdict = skip IF (and only if one of these holds — nice-to-haves never count):
    - The candidate misses two or more must-haves, OR
    - Any single must-have is a hard blocker (wrong seniority, wrong domain,
-     required years far exceed candidate's, required tool/domain experience
+     required years far exceed candidate's, a required tool/domain experience
      entirely absent), OR
    - The role's core function is something the candidate has no evidence of doing.
 
@@ -50,7 +57,7 @@ RETURN JSON with this exact shape:
   "confidence": "high" | "medium" | "low",
   "reasoning": {
     "strengths": ["2-5 concrete matches between posting and profile"],
-    "gaps": ["0-5 requirements in the posting not covered by profile"],
+    "gaps": ["0-5 REQUIRED items the profile shows are missing (prefix nice-to-haves with 'Nice-to-have:')"],
     "open_questions": ["Empty if verdict is high-confidence apply/skip. Non-empty for borderline."],
     "reason": "A brief explanation for the verdict, especially why a skip recommendation was made."
   }
@@ -63,7 +70,7 @@ def assess_fit(signals: dict, profile: dict, client, company_context: dict | Non
     """
     # Load detailed profile context
     profile_context = ""
-    profile_files = ["experience.md", "skills.md", "education.md", "positioning.md"]
+    profile_files = ["cv.md", "experience.md", "projects.md", "skills.md", "education.md", "positioning.md"]
     
     for filename in profile_files:
         filepath = f"data/{filename}"

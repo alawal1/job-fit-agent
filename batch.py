@@ -56,6 +56,8 @@ def _format(heading: str, url, result=None, error=None, attempts=1) -> str:
         lines.append(f"- {label}:")
         lines += [f"  - {_one_line(item)}" for item in reasoning.get(key, [])]
     lines.append(f"- reason: {_one_line(reasoning.get('reason', ''))}")
+    lines.append("- cv recommendations:")
+    lines += [f"  - {_one_line(item)}" for item in (result.get("cv_recommendations") or {}).get("readable", [])]
     return "\n".join(lines)
 
 
