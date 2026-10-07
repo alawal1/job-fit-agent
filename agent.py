@@ -159,30 +159,31 @@ TOOL_DEFINITIONS = [
 
 
 # Runtime implementations. Tools that need the OpenAI client get it passed in.
-def _execute_tool(name: str, args: dict, posting_text: str | None = None) -> dict:
+def _execute_tool(name: str, args: dict, run: dict) -> dict:
+    """run holds this analysis' real tool outputs (posting_text, signals, reasoning).
+    They are used instead of the model's retyped copies in args, which drop or reword fields."""
     print(f"[TOOL CALLED] name={name} args_keys={list(args.keys())}", flush=True)
+    signals = run.get("signals") or args.get("signals")
+    missing_signals = {"error": "Missing 'signals' argument. You must pass the signals object from extract_job_signals."}
 
     if name == "fetch_job_posting":
         text = fetch_job_posting(args["url"])
+        run["posting_text"] = text
         result = {"text": text, "length_chars": len(text)}
     elif name == "extract_job_signals":
-        # Use the real posting text: the model's retyped copy in args loses structure (e.g. "Bonus" labels).
-        result = extract_job_signals(posting_text or args["job_text"], client)
+        result = extract_job_signals(run.get("posting_text") or args["job_text"], client)
+        run["signals"] = result
     elif name == "check_hard_filters":
-        if "signals" not in args:
-            result = {"error": "Missing 'signals' argument. You must pass the signals object from extract_job_signals."}
-        else:
-            result = check_hard_filters(args["signals"], PROFILE, client)
+        result = check_hard_filters(signals, PROFILE, client) if signals else missing_signals
     elif name == "assess_fit":
-        if "signals" not in args:
-            result = {"error": "Missing 'signals' argument. You must pass the signals object from extract_job_signals."}
-        else:
-            result = assess_fit(args["signals"], PROFILE, client)
+        result = assess_fit(signals, PROFILE, client, posting_text=run.get("posting_text")) if signals else missing_signals
+        run["reasoning"] = result.get("reasoning")
     elif name == "suggest_cv_improvements":
-        if "signals" not in args or "assess_fit_reasoning" not in args:
+        reasoning = run.get("reasoning") or args.get("assess_fit_reasoning")
+        if not signals or not reasoning:
             result = {"error": "Missing required arguments. Pass signals and assess_fit_reasoning."}
         else:
-            result = suggest_cv_improvements(args["signals"], args["assess_fit_reasoning"])
+            result = suggest_cv_improvements(signals, reasoning)
     else:
         result = {"error": f"Unknown tool: {name}"}
 
@@ -217,7 +218,7 @@ def run_agent_v2(url: str) -> dict:
     assess_fit_result = None  # Track the last assess_fit output
     last_check_filters_result = None
     cv_recommendations_result = None
-    posting_text = None
+    run = {}
 
     for iteration in range(MAX_ITERATIONS):
         response = client.chat.completions.create(
@@ -232,6 +233,8 @@ def run_agent_v2(url: str) -> dict:
         
         if choice.finish_reason == "stop":
             if assess_fit_result:
+                if not cv_recommendations_result and assess_fit_result.get("verdict") in ("apply", "borderline"):
+                    cv_recommendations_result = _execute_tool("suggest_cv_improvements", {}, run)
                 return {
                     **assess_fit_result,
                     "cv_recommendations": cv_recommendations_result,  
@@ -272,9 +275,7 @@ def run_agent_v2(url: str) -> dict:
                 tool_calls_made += 1
                 args = json.loads(tool_call.function.arguments)
                 try:
-                    result = _execute_tool(tool_call.function.name, args, posting_text)
-                    if tool_call.function.name == "fetch_job_posting":
-                        posting_text = result["text"]
+                    result = _execute_tool(tool_call.function.name, args, run)
                     if tool_call.function.name == "assess_fit" and "verdict" in result:
                         assess_fit_result = result
                     if tool_call.function.name == "check_hard_filters" and "passed" in result:
@@ -322,7 +323,8 @@ def run_agent_v2_from_text(job_text: str) -> dict:
     tool_calls_made = 0
     assess_fit_result = None
     last_check_filters_result = None
-    cv_recommendations_result = None 
+    cv_recommendations_result = None
+    run = {"posting_text": job_text}
     
     for iteration in range(MAX_ITERATIONS):
         response = client.chat.completions.create(
@@ -337,6 +339,8 @@ def run_agent_v2_from_text(job_text: str) -> dict:
         
         if choice.finish_reason == "stop":
             if assess_fit_result:
+                if not cv_recommendations_result and assess_fit_result.get("verdict") in ("apply", "borderline"):
+                    cv_recommendations_result = _execute_tool("suggest_cv_improvements", {}, run)
                 return {
                     **assess_fit_result,
                     "cv_recommendations": cv_recommendations_result,
@@ -385,7 +389,7 @@ def run_agent_v2_from_text(job_text: str) -> dict:
                 
                 args = json.loads(tool_call.function.arguments)
                 try:
-                    result = _execute_tool(tool_call.function.name, args, job_text)
+                    result = _execute_tool(tool_call.function.name, args, run)
                     if tool_call.function.name == "assess_fit" and "verdict" in result:
                         assess_fit_result = result
                     if tool_call.function.name == "check_hard_filters" and "passed" in result:

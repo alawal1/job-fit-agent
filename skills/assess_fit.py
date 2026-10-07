@@ -28,6 +28,11 @@ Decision rules — apply these in order:
    "experience with." If a requirement is probably met but just not stated
    in the profile (e.g. a common trait or tool), put it in open_questions,
    not gaps. gaps are only for things the profile shows are missing.
+   Check each must-have against the FULL JOB POSTING wording, not just the
+   short signal label (e.g. "SQL" in signals may be "basic SQL is a plus").
+   Every gap names the requirement as the posting states it and what the
+   profile shows instead, e.g. "Required: 3+ years B2B sales; profile shows
+   none." No such contrast to state = not a gap.
 
 3. verdict = apply ONLY IF:
    - The candidate meets every must-have, OR
@@ -64,7 +69,7 @@ RETURN JSON with this exact shape:
 }
 
 Return ONLY the JSON object. No preamble."""
-def assess_fit(signals: dict, profile: dict, client, company_context: dict | None = None) -> dict:
+def assess_fit(signals: dict, profile: dict, client, company_context: dict | None = None, posting_text: str | None = None) -> dict:
     """
     Evaluate fit. Returns verdict + confidence + reasoning + enrichment_used flag.
     """
@@ -94,6 +99,9 @@ def assess_fit(signals: dict, profile: dict, client, company_context: dict | Non
         + "\n\nJOB SIGNALS:\n"
         + json.dumps(signals, indent=2)
     )
+
+    if posting_text:
+        prompt += "\n\nFULL JOB POSTING:\n---\n" + posting_text + "\n---"
 
     if company_context is not None:
         prompt += "\n\nCOMPANY CONTEXT (from prior search):\n" + json.dumps(company_context, indent=2)

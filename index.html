@@ -358,19 +358,17 @@
         html += `<div class="section"><h3>Gaps</h3><p class="empty-state">None identified</p></div>`;
       }
 
-      if (openQuestions.length > 0) {
-        html += `<div class="section"><h3>Open Questions</h3>`;
-        openQuestions.forEach(q => html += `<div class="list-item">${q}</div>`);
-        html += `</div>`;
-      }
-
       if (data.cv_recommendations && data.cv_recommendations.readable && data.cv_recommendations.readable.length > 0) {
         html += `<div class="section"><h3>📋 CV Recommendations</h3>`;
         data.cv_recommendations.readable.forEach(rec => html += `<div class="list-item">${rec}</div>`);
         html += `</div>`;
       }
 
-      resultContent.innerHTML = html;
+      if (openQuestions.length > 0) {
+        html += `<div class="section"><h3>Open Questions</h3>`;
+        openQuestions.forEach(q => html += `<div class="list-item">${q}</div>`);
+        html += `</div>`;
+      }
 
       resultContent.innerHTML = html;
       resultCard.classList.remove('hidden');

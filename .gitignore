@@ -5,3 +5,4 @@ outputs/
 output.md
 *.pyc.DS_Store
 .DS_Store
+data/
