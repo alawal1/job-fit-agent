@@ -1,4 +1,4 @@
-# Job Fit Agent (v2)
+# Job Fit Agent
 
 An agentic job-posting tool. Given a job URL, it decides whether the role is worth applying to — returning `apply`, `borderline`, or `skip` with structured reasoning.
 
